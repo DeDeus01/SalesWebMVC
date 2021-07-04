@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using SalesWebMVC.Models;
 using SalesWebMVC.Data;
+using SalesWebMVC.Services;
 
 namespace SalesWebMVC
 {
@@ -22,15 +23,17 @@ namespace SalesWebMVC
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services) //registro de serviços. injeção de dependencia.
         {
-            services.AddMvc();
+            services.AddMvc();      
 
             services.AddDbContext<SalesWebMVCContext>(options =>
                     options.UseMySql(Configuration.GetConnectionString("SalesWebMVCContext"), builder => 
                         builder.MigrationsAssembly("SalesWebMVC")));
 
             services.AddScoped<SeedingService>();
+            services.AddScoped<SellerService>();
+            services.AddScoped<DepartmentService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,7 +43,7 @@ namespace SalesWebMVC
             {
                 app.UseBrowserLink();
                 app.UseDeveloperExceptionPage();
-                seedingService.Seed();
+                seedingService.Seed(); //aqui gera o erro na criação da base ao usar Update-Database (comentar o codigo) 
             }
             else
             {
