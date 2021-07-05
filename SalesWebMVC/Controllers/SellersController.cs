@@ -22,37 +22,42 @@ namespace SalesWebMVC.Controllers
             _departmentService = departmentService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var list = _sellerService.FindAll(); //o controlador manda o serviço chamar o metodo find all e trazer a lista.
+            var list = await _sellerService.FindAllAsync(); //o controlador manda o serviço chamar o metodo find all e trazer a lista.
 
             return View(list); //retorna um oobjeto IActionResult -> view na pasta Sellers
         }
 
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var departments = _departmentService.FindAll(); //ao abrir a pagina ja traz  a lista do banco
+            var departments = await _departmentService.FindAllAsync(); //ao abrir a pagina ja traz  a lista do banco
             var viewModel = new SellerFormViewModel { Departmens = departments };
             return View(viewModel); //passa pra view a lista de departamentos na view.
         }
 
         [HttpPost] // serve pra indicar que o metodo é uma ação de post. 
         [ValidateAntiForgeryToken] //serve para previnir a app de ataque csrf usando a sessao ativa.
-        public IActionResult Create(Seller seller)
+        public async Task<IActionResult> Create(Seller seller)
         {
-            _sellerService.Insert(seller);
+            if (!ModelState.IsValid) //serve para aumentar a validação dos dados antes de salvar, caso o javascript nao funcione.
+            {
+                return View(seller);
+            }
+
+            await _sellerService.InsertAsync(seller);
             return RedirectToAction(nameof(Index)); // o metodo retorna um redirecionamento para o metodo index 
         }
 
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
                 return RedirectToAction(nameof(Error),new { message = "Id not provided"});
             }
 
-            var obj = _sellerService.FindById(id.Value);
+            var obj = await _sellerService.FindByIdAsync(id.Value);
 
             if (obj == null)
             {
@@ -63,21 +68,21 @@ namespace SalesWebMVC.Controllers
         }
 
 
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return RedirectToAction(nameof(Error), new { message = "Id not provided" }); ;
             }
 
-            var obj = _sellerService.FindById(id.Value);
+            var obj = await _sellerService.FindByIdAsync(id.Value);
 
             if (obj == null)
             {
                 return RedirectToAction(nameof(Error), new { message = "Id not found" }); ;
             }
 
-            List<Department> departments = _departmentService.FindAll();
+            List<Department> departments = await _departmentService.FindAllAsync();
             SellerFormViewModel viewModel = new SellerFormViewModel { Seller = obj, Departmens = departments };
 
             return View(viewModel);
@@ -85,15 +90,21 @@ namespace SalesWebMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Seller seller)
+        public async Task<IActionResult> Edit(int id, Seller seller)
         {
+            if (!ModelState.IsValid) //validação no servidor, quando uma requisição vai com erros ele exibe as mensagens de validação.
+            {
+                var departments = await _departmentService.FindAllAsync();
+                var viewModel = new SellerFormViewModel { Seller = seller, Departmens = departments };
+                return View(viewModel);
+            }
             if (id != seller.Id) //id diferente do objeto é errado
             {
                 return RedirectToAction(nameof(Error), new { message = "Id mismatch" }); ;
             }
             try
             {
-                _sellerService.Update(seller);
+                await _sellerService.UpdateAsync(seller);
                 return RedirectToAction(nameof(Index)); //redireciona para o metodo index desta classe.(tela index)
 
             } catch (NotFoundException e)
@@ -107,14 +118,14 @@ namespace SalesWebMVC.Controllers
         }
 
         //Metodo get que busca o objeto a retorna a view com o objeto.
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return RedirectToAction(nameof(Error), new { message = "Id not provided" }); ;
             }
 
-            var obj = _sellerService.FindById(id.Value); //pesquisa o objeto usando o serviço.
+            var obj = await _sellerService.FindByIdAsync(id.Value); //pesquisa o objeto usando o serviço.
 
             if (obj == null)
             {
@@ -126,12 +137,11 @@ namespace SalesWebMVC.Controllers
 
         [HttpPost]              //O metodo executou corretamente pois a solicitação foi POST. analisar melhor.
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _sellerService.Remove(id);
+            await _sellerService.RemoveAsync(id);
             return RedirectToAction(nameof(Index));
         }
-
 
         public IActionResult Error(string message)
         {

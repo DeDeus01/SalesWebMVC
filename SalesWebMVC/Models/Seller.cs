@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,10 +9,26 @@ namespace SalesWebMVC.Models
     public class Seller
     {
         public int Id { get; set; }
+
+        [Required(ErrorMessage ="{0} is required")]
+        [StringLength(60,MinimumLength = 5,ErrorMessage = "O tamanho do {0} deve ser de 5 a 60")]
         public string Name { get; set; }
+
+        [Required(ErrorMessage = "{0} is required")]
+        [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
+
+        [Required(ErrorMessage = "{0} is required")]
+        [Display(Name = "Birth Date")] //serve para corrigir espaçamentos e formato nas views do app.
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString ="{0:dd/MM/yyyy}")]
         public DateTime BirthDate { get; set; }
+
+        [Required(ErrorMessage = "{0} is required")] //opções de validação!
+        [Display(Name = "Base Salary")]
+        [DisplayFormat(DataFormatString ="{0:F2}")]
         public double BaseSalary { get; set; }
+
         public Department Department { get; set; }
         public int DepartmentId { get; set; }
         public ICollection<SalesRecord> Sales { get; set; } = new List<SalesRecord>();
